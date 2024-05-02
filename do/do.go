@@ -2,9 +2,8 @@ package do
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
-
-	"github.com/go-chi/chi"
 )
 
 type do_allApiFunc func(string)
@@ -35,9 +34,46 @@ func Do_choose_api(w http.ResponseWriter, r *http.Request) {
 	
 	
 }
+//TODO: get server ip func, finish other api，get slot number
+
+
+func sendGETRequest(uri string) {
+	// 创建一个新的 HTTP 请求
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	// 设置请求头
+	req.Header.Set("Accept", "vdn.dac.v1")
+	req.Header.Set("Content-Type", "application/json")
+
+	// 使用默认的 HTTP 客户端发送请求
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// 读取响应体
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return
+	}
+
+	// 输出响应体
+	fmt.Println("Response body:", string(body))
+}
+
 
 func do_get_whole_value(msg string){
 	fmt.Println("do_get_whole_value:", msg)
+	uri := "http://192.168.127.254/api/slot/0/io/do"
+	sendGETRequest(uri)
 }
 
 func do_get_status(msg string){
@@ -52,7 +88,3 @@ func do_get_paulse_count(msg string){
 	fmt.Println("do_get_paulse_count:", msg)
 }
 
-func GetRouter() *chi.Mux {
-    router := chi.NewRouter()
-    return router
-}
