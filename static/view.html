@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Endpoint Responses</title>
+</head>
+<body>
+    <h1>Endpoint Responses</h1>
+    {{range .}}
+        <h2>{{.Endpoint}}</h2>
+        <pre>{{.Response}}</pre>
+    {{end}}
+</body>
+</html>

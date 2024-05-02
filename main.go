@@ -1,47 +1,85 @@
 package main
 
 import (
+	"fmt"
+	"go-Moxa/di"
+	"go-Moxa/do"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi"
 )
 
+func choose_api(callback func() ){
+	callback()
+}
+var router *chi.Mux
 func main() {
-	r := setupServer()
-	http.ListenAndServe(":3000", r)
+	router = chi.NewRouter()
+	router.Get("/", do.Do_choose_api)
+	di.Di_choose_api(20)
+	// choose_api(do.Do_choose_api)
+	fmt.Println("Server is running on :8080")
+    http.ListenAndServe(":8080", router)
+
 }
+// func db_create(){
+// 	db, err := sql.Open("sqlite3", "./di_data.db")
+// 	if err != nil {
+// 		fmt.Println("無法打開數據庫:", err)
+// 		return
+// 	}
+// 	defer db.Close()
 
-func setupServer() chi.Router {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+// 	// 創建數據庫表
+// 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS di_data (
+// 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+// 		slot INTEGER,
+// 		di_index INTEGER,
+// 		di_mode INTEGER,
+// 		di_status INTEGER
+// 	)`)
+// 	if err != nil {
+// 		fmt.Println("無法創建表:", err)
+// 		return
+// 	}
+// }
 
-	r.Get("/", homeHandler) // 接收IP
+// func setupServer() chi.Router {
+// 	r := chi.NewRouter()
+// 	r.Use(middleware.Logger)
+// 	r.Use(middleware.Recoverer)
 
-	r.Mount("/moxa", moxaRoutes())
+// 	r.Get("/", homeHandler) // 接收IP
 
-	fs := http.FileServer(http.Dir("static"))
-    r.Handle("/static/*", http.StripPrefix("/static/", fs))
+// 	r.Mount("/moxa", moxaRoutes())
 
-	return r
-}
+// 	fs := http.FileServer(http.Dir("static"))
+//     r.Handle("/static/*", http.StripPrefix("/static/", fs))
+	
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// 導向到 HTML 表單頁面
-	http.Redirect(w, r, "/static/rest_view.html", http.StatusSeeOther)
-}
+// 	return r
+// }
+
+// func homeHandler(w http.ResponseWriter, r *http.Request) {
+// 	// 導向到 HTML 表單頁面
+// 	http.Redirect(w, r, "/static/rest_view.html", http.StatusSeeOther)
+// }
 
 
 
-func moxaRoutes() chi.Router {
-	r := chi.NewRouter()
-	diHandler := DiHandler{
-	}
-	// 靜態檔案服務
-	r.Get("/getdi", diHandler.Get_di) // 傳送IP
+// func moxaRoutes() chi.Router {
+// 	r := chi.NewRouter()
+// 	diHandler := DiHandler{
+// 	}
+// 	// DbHandler := DbHandler{}
+// 	// 靜態檔案服務
+// 	r.Get("/getdi", diHandler.Get_di) // 傳送IP
+// 	// r.Get("/viewdb", DbHandler.ViewDBHandler) // 傳送IP
+	
+
 	
 	
+	
 
-	return r
-}
+// 	return r
+// }
