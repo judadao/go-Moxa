@@ -2,84 +2,73 @@ package main
 
 import (
 	"fmt"
-	"go-Moxa/di"
 	"go-Moxa/do"
-	"net/http"
-
-	"github.com/go-chi/chi"
+	"sync"
 )
 
-func choose_api(callback func() ){
-	callback()
-}
-var router *chi.Mux
 func main() {
-	router = chi.NewRouter()
-	router.Get("/", do.Do_choose_api)
-	di.Di_choose_api(20)
-	// choose_api(do.Do_choose_api)
-	fmt.Println("Server is running on :8080")
-    http.ListenAndServe(":8080", router)
+	// router = chi.NewRouter()
+	var wg sync.WaitGroup
+	// concurrency := 100 //限制100條thread
+	
+	doObj := do.DoObj{}
+	di := do.NewMachine("e1200", "1213","192.168.127.254", "do", 8)
+	// di2 := do.NewMachine("e1200", "1213","192.1.1.2", "di", 8)
+	// di3 := do.NewMachine("e1200", "1213","192.1.1.3", "di", 8)
+	// di4 := do.NewMachine("e1200", "1213","192.1.1.4", "di", 8)
+	// router.Get("/", doObj.Do_choose_api)
+	
+	// for i := 0; i < 4; i++ {
+	// 	wg.Add(1) // 增加計數器
+	// }
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		task1(doObj, di)
+	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	task2(doObj, di)
+	// }()
+
+	
+	//To 看現有schedual，來測試schel task
+	//併發執行完的
+	
+	wg.Wait() // 等待所有Goroutines完成
+ 	fmt.Println("All Goroutines have finished.")
 
 }
-// func db_create(){
-// 	db, err := sql.Open("sqlite3", "./di_data.db")
-// 	if err != nil {
-// 		fmt.Println("無法打開數據庫:", err)
-// 		return
-// 	}
-// 	defer db.Close()
 
-// 	// 創建數據庫表
-// 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS di_data (
-// 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-// 		slot INTEGER,
-// 		di_index INTEGER,
-// 		di_mode INTEGER,
-// 		di_status INTEGER
-// 	)`)
-// 	if err != nil {
-// 		fmt.Println("無法創建表:", err)
-// 		return
-// 	}
-// }
-
-// func setupServer() chi.Router {
-// 	r := chi.NewRouter()
-// 	r.Use(middleware.Logger)
-// 	r.Use(middleware.Recoverer)
-
-// 	r.Get("/", homeHandler) // 接收IP
-
-// 	r.Mount("/moxa", moxaRoutes())
-
-// 	fs := http.FileServer(http.Dir("static"))
-//     r.Handle("/static/*", http.StripPrefix("/static/", fs))
+func task1(doObj do.DoObj, do *do.Machine) {
+	// defer close(di.Channel[0])
+	// doObj.Do_choose_api("DO_WHOLE", di, 0)
+	// fmt.Println( do.Do_pop_ch(di, 0))
 	
+	// doObj.Do_choose_api("DO_STATUS", di, 0)
+	doObj.Do_choose_api("DO_GET_VALUE", do, 1)
+	doObj.Do_choose_api("DO_GET_VALUE", do, 2)
+	doObj.Do_choose_api("DO_GET_VALUE", do, 3)
+	doObj.Do_choose_api("DO_GET_VALUE", do, 4)
+	doObj.Do_choose_api("DO_GET_VALUE", do, 5)
+	//##TODO: 完成put api
+	
+	// doObj.Do_choose_api("DO_PAULSESTATUS", di, 0)
 
-// 	return r
-// }
-
-// func homeHandler(w http.ResponseWriter, r *http.Request) {
-// 	// 導向到 HTML 表單頁面
-// 	http.Redirect(w, r, "/static/rest_view.html", http.StatusSeeOther)
-// }
-
-
-
-// func moxaRoutes() chi.Router {
-// 	r := chi.NewRouter()
-// 	diHandler := DiHandler{
-// 	}
-// 	// DbHandler := DbHandler{}
-// 	// 靜態檔案服務
-// 	r.Get("/getdi", diHandler.Get_di) // 傳送IP
-// 	// r.Get("/viewdb", DbHandler.ViewDBHandler) // 傳送IP
+	// doObj.Do_choose_api("DO_READ_CH", di, 0)
+	// doObj.Do_choose_api("DO_READ_CH", di, 0)
+	// fmt.Println( do.Do_pop_ch(di, 0))
 	
 
 	
-	
-	
+	fmt.Println("End task1")
+}
 
-// 	return r
-// }
+func task2(doObj do.DoObj, di *do.Machine) {
+	doObj.Do_choose_api("DO_PAULSESTATUS", di, 0)
+	// do.Do_pop_ch(di, 0)
+	// doObj.Do_choose_api("DO_PAULSESTATUS", di, 0)
+	// doObj.Do_choose_api("DO_PAULSECOUNT", di, 0)
+	fmt.Println("End task2")
+	do.Do_clear_ch(di, 0)
+}
