@@ -49,7 +49,7 @@ func main() {
 
 	
 	//To 看現有schedual，來測試schel task
-	//併發執行完的
+
 	
 	wg.Wait() // 等待所有Goroutines完成
  	fmt.Println("All Goroutines have finished.")
@@ -60,31 +60,10 @@ func task1(doObj do.DoObj, do *do.Machine) {
 
 	res :=doObj.Do_choose_api("DO_CHECK", do, 0, "1")
 	if res == 1 {
-		// wg.Add(1)
-		// go func() {
-			// defer wg.Done()
-			sub_task1(doObj, do)
-			// doObj.Do_choose_api("DO_PUT_VALUE", do, 0, "1")
-		// }()
+		sub_task1(doObj, do)
 	}else{
-		// wg.Add(1)
-		// go func() {
-		// 	defer wg.Done()
-			sub_task2(doObj, do)
-			// doObj.Do_choose_api("DO_PUT_VALUE", do, 0, "0")
-
-		// }()
+		sub_task2(doObj, do)
 	}
-
-	
-	//##TODO: 完成put api
-	
-	// doObj.Do_choose_api("DO_PAULSESTATUS", di, 0)
-
-	// doObj.Do_choose_api("DO_READ_CH", di, 0)
-	// doObj.Do_choose_api("DO_READ_CH", di, 0)
-	// fmt.Println( do.Do_pop_ch(di, 0))
-	
 
 	
 	fmt.Println("End task1")
