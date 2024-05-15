@@ -2,17 +2,17 @@
 
 # Feature
 
-- 控制Moxa device 透過restful api
+- Control Moxa devices through a RESTful API.
   
-  - 將Moxa 各device 的restful api切分成可操控的function，且操作function只需要填入對應的關鍵子即可使用
+  - Divide the RESTful API of each Moxa device into controllable functions, where operating a function only requires inputting the corresponding keyword.
     
-  - Device 使用物件宣告使用上更直觀
+  - Using object declaration for devices makes usage more intuitive.
     
-  - 可以自由拼裝Function需求
+  - Freedom to assemble function requirements.
     
-- 可跨平台控制可支援的裝置如下
+- Cross-platform control supports the following devices:
   
-  - moxa E1200 系列
+  - Moxa E1200 Series
     
     - DO
       
@@ -20,60 +20,60 @@
       
   - (#TODO) moxa 4510
     
-  - (#TODO) moxa 後續新機種
+  - (#TODO) Future Moxa models
     
 
 ## Quick Start
 
-- 宣告你的Device為object
+- Declare your Device as an object
   
   ```go
     do := do.NewMachine("e1200", "1213","192.168.127.254", "do", 8)
-    //參數分別為"主型號", "副型號","IP", "IO channel type", "Channel numbers"
+    //Parameters are "main model", "sub-model","IP", "IO channel type", "Channel numbers"
   ```
   
-- 宣告Do interface
+- Declare Do interface
   
   ```go
     doObj := do.DoObj{}
   ```
   
-- 使用Do_choose_api選擇你要執行的restful功能。以下用get /put Value來舉例
+- Use Do_choose_api to select the RESTful function you want to execute. Below are examples using get / put Value.
   
 - Get:
   
   ```go
     doObj.Do_choose_api("DO_GET_VALUE", do, 1, "")
-    //參數"function關鍵字", "machine obj", "channel number"
+    //Parameters: "function keyword", "machine obj", "channel number"
   ```
   
 - Put:
   
   ```go
     doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "0")
-    //參數"function關鍵字", "machine obj", "channel number", "msg"
+    //Parameters: "function keyword", "machine obj", "channel number", "msg"
     ```
   
-- 目前可支援E1200
+- Currently supports E1200
   
   - DO
     
-    - DO_WHOLE : update 目前本機儲存的restful value
+    - DO_WHOLE: Update the current locally stored RESTful value
       
-    - DO_CHECK : 檢查目前的channel值
+    - DO_CHECK: Check the current channel value
       
-    - DO_PUT_VALUE : 將value put進對應的channel
+    - DO_PUT_VALUE: Put the value into the corresponding channel
       
-    - DO_GET_VALUE : 取得對應Channel的值
+    - DO_GET_VALUE: Get the value of the corresponding channel
       
 
 ## You can do
 
-- 在main.go中有範例
+- There is an example in main.go
   
-  - 展示用update, check 跟put 的組合，完成使用go moxa控制1200 do
+  - Demonstrates the combination of update, check, and put to control the E1200 DO using Go Moxa.
     
-- 首先我希望每一秒去檢查目前的restful 狀態，符合條件後觸發task1
+- First, I want to check the current RESTful status every second and trigger task1 when conditions are met.
   
      ```go
     ticker := time.Tick(1000 * time.Millisecond)  //1 sec 
@@ -84,13 +84,13 @@
                 defer wg.Done()
     
                 doObj.Do_choose_api("DO_WHOLE", do, 0, "") //update resful value
-                res := doObj.Do_choose_api("DO_CHECK", do, 0, "1")//check machine channel 0 status是否是1
+                res := doObj.Do_choose_api("DO_CHECK", do, 0, "1")//check machine channel 0 status
     
-                if res == lastCheckResult { //確保只執行一次不會一直執行
+                if res == lastCheckResult { ////ensure only executes once
                     return
                 }
                 lastCheckResult = res
-                go task1(doObj, do) //執行task1
+                go task1(doObj, do) //execute task1
             }()
         }
     ```
@@ -100,11 +100,11 @@
   ```go
     func task1(doObj do.DoObj, do *do.Machine) {
     
-        res :=doObj.Do_choose_api("DO_CHECK", do, 0, "1") //判斷ch是否為1
+        res :=doObj.Do_choose_api("DO_CHECK", do, 0, "1") //check if ch is 1
         if res == 1 {
-            sub_task1(doObj, do) // true 執行sub task1
+            sub_task1(doObj, do) // true execute sub task1
         }else{
-            sub_task2(doObj, do) // false 執行sub task2
+            sub_task2(doObj, do) // true execute sub task2
         }
     
         
@@ -115,7 +115,7 @@
 - sub task
   
   ```go
-    func sub_task1(doObj do.DoObj, do *do.Machine) { //do ch 1~5 設為on
+    func sub_task1(doObj do.DoObj, do *do.Machine) { //set do ch 1~5 to on
     
         doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "1")
         doObj.Do_choose_api("DO_PUT_VALUE", do, 2, "1")
@@ -123,10 +123,9 @@
         doObj.Do_choose_api("DO_PUT_VALUE", do, 4, "1")
         doObj.Do_choose_api("DO_PUT_VALUE", do, 5, "1")
         fmt.Println("End sub task1")
-        // do.Do_clear_ch(do, 0)
     }
     
-    func sub_task2(doObj do.DoObj, do *do.Machine) { // do ch 1~5設為off, 6~7 設為on
+    func sub_task2(doObj do.DoObj, do *do.Machine) { //set do ch 1~5 to off, 6~7 to on
     
         doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "0")
         doObj.Do_choose_api("DO_PUT_VALUE", do, 2, "0")
@@ -136,6 +135,5 @@
         doObj.Do_choose_api("DO_PUT_VALUE", do, 6, "1")
         doObj.Do_choose_api("DO_PUT_VALUE", do, 7, "1")
         fmt.Println("End sub task2")
-        // do.Do_clear_ch(do, 0)
     }
     ```
