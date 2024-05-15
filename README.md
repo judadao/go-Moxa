@@ -27,29 +27,29 @@
 
 - 宣告你的Device為object
   
-    - ```go
+  ```go
     do := do.NewMachine("e1200", "1213","192.168.127.254", "do", 8)
     //參數分別為"主型號", "副型號","IP", "IO channel type", "Channel numbers"
-    ```
+  ```
   
 - 宣告Do interface
   
-    - ```go
+  ```go
     doObj := do.DoObj{}
-    ```
+  ```
   
 - 使用Do_choose_api選擇你要執行的restful功能。以下用get /put Value來舉例
   
 - Get:
   
-    - ```go
+  ```go
     doObj.Do_choose_api("DO_GET_VALUE", do, 1, "")
     //參數"function關鍵字", "machine obj", "channel number"
-    ```
+  ```
   
 - Put:
   
-    - ```go
+  ```go
     doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "0")
     //參數"function關鍵字", "machine obj", "channel number", "msg"
     ```
@@ -75,7 +75,7 @@
     
 - 首先我希望每一秒去檢查目前的restful 狀態，符合條件後觸發task1
   
-    - ```go
+     ```go
     ticker := time.Tick(1000 * time.Millisecond)  //1 sec 
     
         for range ticker {
@@ -97,7 +97,7 @@
   
 - task1
   
-    - ```go
+  ```go
     func task1(doObj do.DoObj, do *do.Machine) {
     
         res :=doObj.Do_choose_api("DO_CHECK", do, 0, "1") //判斷ch是否為1
@@ -114,7 +114,7 @@
   
 - sub task
   
-    - ```go
+  ```go
     func sub_task1(doObj do.DoObj, do *do.Machine) { //do ch 1~5 設為on
     
         doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "1")
