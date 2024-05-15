@@ -35,7 +35,7 @@ func NewMachine(main_type string, sub_type string, ip string, ch_type string, nu
 }
 
 
-func (d DoObj)Do_choose_api(apiKey string, machine *Machine, ch int) int{
+func (d DoObj)Do_choose_api(apiKey string, machine *Machine, ch int, wrData string) int{
 	// var apiKey = ""
 	if machine == nil {
         fmt.Println("Machine is nil")
@@ -43,7 +43,7 @@ func (d DoObj)Do_choose_api(apiKey string, machine *Machine, ch int) int{
     }
 	// apiKey = "DO_WHOLE"
 	if fn, ok := doApiMap[apiKey];ok{
-		return fn(apiKey, machine, ch)
+		return fn(apiKey, machine, ch, wrData)
 	}else{
 		fmt.Println("not exit")
 		return -1
@@ -52,7 +52,55 @@ func (d DoObj)Do_choose_api(apiKey string, machine *Machine, ch int) int{
 }
 //TODO: get server ip func, finish other api，get slot number
 
-func do_get_rest_request(apiKey string, do_param string, machine *Machine, ch int)(float64){
+func do_update_whole_status(apiKey string, machine *Machine, ch int, wrData string) (map[string]interface{}, error) {
+    uri, ok := restUri[apiKey]
+    if !ok {
+        return nil, fmt.Errorf("API key not found: %s", apiKey)
+    }
+
+	if apiKey != "DO_WHOLE" {
+		return nil, fmt.Errorf("wrong type")
+	}
+
+    fmt.Println("http://" + machine.IP + uri )
+    resp, err := http_rest.SendGETRequest("http://" + machine.IP + uri )
+    if err != nil {
+        return nil, fmt.Errorf("error sending GET request: %s", err)
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("error reading response body: %s", err)
+    }
+	// fmt.Println("Response body:", string(body))
+    var data map[string]interface{}
+	if err := json.Unmarshal([]byte(string(body)), &data); err != nil {
+		fmt.Println("Error decoding response body:", err)
+		return nil, fmt.Errorf("error reading response body: %s", err)
+	}
+	// for key, value := range data {
+	// 	fmt.Println(key, ":", value)
+	// }
+	doList:= data["io"].(map[string]interface{})["do"].([]interface{})
+	for _, item := range doList {
+		doItem, ok := item.(map[string]interface{})
+		if !ok {
+			fmt.Println("Error: item is not a map[string]interface{}")
+			continue
+		}
+		
+		doIndex := doItem["doIndex"].(float64)
+		// doMode := doItem["doMode"]
+		doStatus := doItem["doStatus"].(float64)
+		Do_clear_ch(machine, int(doIndex))
+		machine.Channel[int(doIndex)] <- int(doStatus)
+	
+		// fmt.Println("doIndex:", doIndex, "doMode:", doMode, "doStatus:", doStatus)
+	}
+    return data, nil
+}
+
+func do_get_rest_request(apiKey string, do_param string, machine *Machine, ch int, wrData string)(float64){
 	uri, ok := restUri[apiKey]
     if !ok {
         return -1
@@ -89,7 +137,44 @@ func do_get_rest_request(apiKey string, do_param string, machine *Machine, ch in
     return status
 }
 
-func do_get_whole_value(msg string, machine *Machine, ch int) int {
+
+func do_put_rest_request(apiKey string, do_param string, machine *Machine, ch int, wrData string)(float64){
+	uri, ok := restUri[apiKey]
+	reqJson := `{"slot":0,"io":{"do":{"`+strconv.Itoa(ch)+`":{"doStatus":`+wrData+`}}}}`
+	fmt.Println(reqJson)
+    if !ok {
+		Do_clear_ch(machine, ch)
+        return -1
+    }
+	param, ok := restParam[do_param]
+    if !ok {
+        fmt.Println("Error: msg not found in restUri")
+		Do_clear_ch(machine, ch)
+        return -1
+    }
+	fmt.Println("http://"+machine.IP+uri+"/"+strconv.Itoa(ch)+param)
+	_, err := http_rest.SendPUTRequest("http://"+machine.IP+uri+"/"+strconv.Itoa(ch)+param, reqJson)
+	if err != nil {
+        fmt.Println("Error sending GET request:", err)
+		Do_clear_ch(machine, ch)
+        return -1
+    }
+	num, err := strconv.Atoi(wrData)
+	if err != nil {
+		fmt.Println("轉換失敗:", err)
+		Do_clear_ch(machine, ch)
+		return -1
+	}
+
+	Do_push_ch(machine, ch, num)
+
+	fmt.Println("success")
+	return 0
+
+	
+}
+
+func do_get_whole_value(msg string, machine *Machine, ch int, wrData string) int {
 	fmt.Println("do_get_status:", msg, " ,ip:", machine.IP, " ,ch:", ch)
 	Do_push_ch(machine, ch, 0)
 	// uri := "http://192.168.127.254/api/slot/0/io/do"
@@ -98,38 +183,69 @@ func do_get_whole_value(msg string, machine *Machine, ch int) int {
 }
 
 
-func do_get_status(msg string, machine *Machine, ch int) int {
+func do_get_status(msg string, machine *Machine, ch int, wrData string) int {
 	fmt.Println("do_get_status:", msg, " ,ip:", machine.IP, " ,ch:", ch)
 	Do_push_ch(machine, ch, 1)
 	return 0
 }
 
-func do_get_paulse_status(msg string, machine *Machine, ch int) int {
+func do_get_paulse_status(msg string, machine *Machine, ch int, wrData string) int {
 	fmt.Println("do_get_status:", msg, " ,ip:", machine.IP, " ,ch:", ch)
 	Do_push_ch(machine, ch, 2)
 	return 0
 }
 
-func do_get_paulse_count(msg string, machine *Machine, ch int) int {
+func do_get_paulse_count(msg string, machine *Machine, ch int, wrData string) int {
 	fmt.Println("do_get_status:", msg, " ,ip:", machine.IP, " ,ch:", ch)
 	Do_push_ch(machine, ch, 3)
 	return 0
 }
 
+func _do_check_value(apiKey string, machine *Machine, ch int, wrData string) int{
+
+	value := <-machine.Channel[ch]
+	fmt.Println("ch ",ch, ":", value)
+	machine.Channel[ch] <- value
+	i, err := strconv.Atoi(wrData)
+    if err != nil {
+        fmt.Println("trans fail:", err)
+        return -1
+    }
+	if i == value{
+		return 1
+	}else{
+		return -1
+	}
+
+}
 
 
 
 //commom func
-func do_get_value(apiKey string, machine *Machine, ch int) int {
+
+func do_check_value(apiKey string, machine *Machine, ch int, wrData string) int {
 	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
-	res :=do_get_rest_request(apiKey,"DO_STATUS", machine, ch)
+	
+	return _do_check_value(apiKey, machine, ch, wrData)
+}
+func do_update_value(apiKey string, machine *Machine, ch int, wrData string) int {
+	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	do_update_whole_status("DO_WHOLE", machine, 0, wrData)
+	
+	return 0
+}
+func do_get_value(apiKey string, machine *Machine, ch int, wrData string) int {
+	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	res :=do_get_rest_request(apiKey,"DO_STATUS", machine, ch, wrData)
 	fmt.Println(res)
 	return 0
 }
 
-func do_put_value(msg string, machine *Machine, ch int) int {
-	fmt.Println("do_get_status:", msg, " ,ip:", machine.IP, " ,ch:", ch)
-	Do_pop_ch(machine, ch)
+func do_put_value(apiKey string, machine *Machine, ch int, wrData string) int {
+	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	// Do_pop_ch(machine, ch)
+	Do_clear_ch(machine, ch)
+	do_put_rest_request(apiKey,"DO_STATUS", machine, ch, wrData)
 	return 0
 }
 
@@ -163,10 +279,10 @@ func Do_pop_ch(machine *Machine, ch int) int {
 func Do_clear_ch(machine *Machine, ch int) int{
 	select {
     case <-machine.Channel[ch]:
-        fmt.Println("ch is non empty, clear it")
+        // fmt.Println("ch ", ch, " is non empty, clear it")
 		return 0
     default:
-        fmt.Println("ch is empty")
+        // fmt.Println("ch", ch, " is empty")
 		return 1
     }
 }
