@@ -14,14 +14,16 @@ type DoRequest struct {
 type do_allApiFunc func(string, *Machine, int, string) int
 
 var doApiMap = map[string]do_allApiFunc{
-	"DO_WHOLE":        do_update_value,
-	"DO_CHECK":        do_check_value,
-	"DO_STATUS":       do_get_status,
-	"DO_PAULSESTATUS": do_get_paulse_status,
-	"DO_PAULSECOUNT":  do_get_paulse_count,
-	"DO_UPDATE_VALUE": do_update_value,
-	"DO_GET_VALUE":    do_get_value,
-	"DO_PUT_VALUE":    do_put_value,
+	"DO_WHOLE":          do_update_value,
+	"DO_CHECK":          do_check_value,
+	"DO_STATUS":         do_get_status,
+	"DO_PAULSESTATUS":   do_get_paulse_status,
+	"DO_PAULSECOUNT":    do_get_paulse_count,
+	"DO_UPDATE_VALUE":   do_update_value,
+	"DO_GET_VALUE":      do_get_value,
+	"DO_PUT_VALUE":      do_put_value,
+	"TEST_DO_GET_VALUE": test_do_get_value,
+	"TEST_DO_PUT_VALUE": test_do_put_value,
 }
 
 // key must same with doApiMap
