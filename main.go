@@ -212,7 +212,7 @@ func (q *TaskQueue) AddTask(taskFunc func(task Task)) {
 
 func (q *TaskQueue) ExecuteTasks() {
 	for _, taskFunc := range q.queue {
-		taskFunc(Task{})
+		go taskFunc(Task{})
 	}
 }
 
