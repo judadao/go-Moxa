@@ -9,21 +9,59 @@
   - Using object declaration for devices makes usage more intuitive.
     
   - Freedom to assemble function requirements.
+  - (2024/05/21 update) A task can be automatically generated from the input sentence.task
+  - (#TODO: 串接AI)
     
 - Cross-platform control supports the following devices:
   
-  - Moxa E1200 Series
-    
-    - DO
-      
-    - (#TODO) DI
-      
-  - (#TODO) moxa 4510
-    
-  - (#TODO) Future Moxa models
+  - Moxa E1200 Series(DO)
     
 
 ## Quick Start
+
+### Control machines with sentences
+
+(#TODO: 跨Device 之間的prompt/struct/parse)
+- 製作你的prompt
+  ```go
+    "device{(type , sub_type, IP)}, when{ condition}, then{action}"
+  ```
+  ex. 
+  ```go
+    "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
+    //Device: e1200, sutype: e1213, IP:192.168.127.254
+    //when Do channel 0 是 1 的時候
+    //Then Do Channel 1, 2, 3設為0
+  ```
+- 加入你的Task
+  ```go
+    input1 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
+    extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
+
+    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
+      allTask.Task_func(&extracted1)
+    })
+  ```
+- 多個Task
+  ```go
+    input1 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
+    extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
+
+    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
+      allTask.Task_func(&extracted1) // 將info輸入task
+    })
+
+    input2 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=0]}, then{[(do,1)=1]&&[(do,2)=1]&&[(do,3)=1]}"
+    extracted2 := task_qu.ExtractContent(input2) //將input轉換成info
+
+    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
+      allTask.Task_func(&extracted2)
+    })
+  ```
+
+
+
+### Assemble everything you need
 
 - Declare your Device as an object
   
@@ -67,11 +105,10 @@
     - DO_GET_VALUE: Get the value of the corresponding channel
       
 
-## You can do
+## Demonstrate the usage of classes and functions
 
-- There is an example in main.go
-  
-  - Demonstrates the combination of update, check, and put to control the E1200 DO using Go Moxa.
+- You can freely assemble functions and objects as needed.
+- Demonstrates the combination of update, check, and put to control the E1200 DO using Go Moxa.
     
 - First, I want to check the current RESTful status every second and trigger task1 when conditions are met.
   
