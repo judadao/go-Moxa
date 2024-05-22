@@ -1,10 +1,5 @@
 package do
 
-type Do_class interface {
-	Do_choose_api(apiKey string, ip string, ch int)
-}
-type DoObj struct{}
-
 type DoRequest struct {
 	APIkey string
 	IP     string

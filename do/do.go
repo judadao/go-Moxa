@@ -33,7 +33,7 @@ func NewMachine(main_type string, sub_type string, ip string, ch_type string, nu
 	return machine
 }
 
-func (d DoObj) Do_choose_api(apiKey string, machine *Machine, ch int, wrData string) int {
+func Do_choose_api(apiKey string, machine *Machine, ch int, wrData string) int {
 	// var apiKey = ""
 	if machine == nil {
 		fmt.Println("Machine is nil")
