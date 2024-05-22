@@ -9,7 +9,7 @@
   - Using object declaration for devices makes usage more intuitive.
     
   - Freedom to assemble function requirements.
-  - (2024/05/21 update) A task can be automatically generated from the input sentence.task
+  - (2024/05/21 update) A task can be automatically generated from the input sentence task
   - (#TODO: 串接AI)
     
 - Cross-platform control supports the following devices:
@@ -20,20 +20,53 @@
 ## Quick Start
 
 ### Control machines with sentences
-
-(#TODO: 跨Device 之間的prompt/struct/parse)
-- 製作你的prompt
-  ```go
-    "device{(type , sub_type, IP)}, when{ condition}, then{action}"
-  ```
-  ex. 
-  ```go
-    "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
-    //Device: e1200, sutype: e1213, IP:192.168.127.254
-    //when Do channel 0 是 1 的時候
-    //Then Do Channel 1, 2, 3設為0
-  ```
-- 加入你的Task
+#### Excute 
+- Install
+  1. Clone this repository: git clone [repo_url]
+  2. Run:
+    ```bash
+    go run main.go
+    ```
+#### Prompt
+- Create Your Own Prompt
+  - Objects will be created using "( )"
+    ex1.
+    ```go
+    //In When & Then 
+    (device1,do,0) // name:device1, channel type: do, channel nmber: 0  
+    ```
+    ex2.
+    ```go
+    //In Device
+    (e1200, e1213, 192.168.127.254) // type:e1200, sub type: e1213, IP: 192.168.127.254
+    ```
+  - Conditions will be set using  "[ ]"
+    ex1.
+    ```go
+    //In When & Then 
+    [(device1, do,0)=1] 
+    // When: device1's do channel 0 equals 1
+    // Then: device1's do channel 0 is set to 1
+    ```
+    ex2.
+    ```go
+    //In Device
+    [(e1200, e1213, 192.168.127.254)=device1] // set device1 info
+    ```
+  - Condition Groups will use "{ }" in three main fields
+  
+    ```go  
+    device{}, when{}, then{}
+    ```
+  - Example of a Full Prompt
+    ```go
+    device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.255)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=0]}, then{[(device1,do,2)=1]&&[(device1, do,3)=1]}
+    // device1 = (e1200, e1213, 192.168.127.254)
+    // device2 = (e1200, e1213, 192.168.127.255)
+    // When device1's do channel 0 is equal to 1 and device2's do channel 1 is equal to 0 
+    // Then device1's do channel 2 is set to 1 and device1's do channel 3 is set to 1
+    ```
+- Add an Task
   ```go
     input1 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
     extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
@@ -42,16 +75,16 @@
       allTask.Task_func(&extracted1)
     })
   ```
-- 多個Task
+- Add many Tasks
   ```go
-    input1 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
+    input1 := "device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.254)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=0]}, then{[(device1,do,2)=1]&&[(device1, do,3)=1]}"
     extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
 
     taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
       allTask.Task_func(&extracted1) // 將info輸入task
     })
 
-    input2 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=0]}, then{[(do,1)=1]&&[(do,2)=1]&&[(do,3)=1]}"
+    input2 := "device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.255)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=1]}, then{[(device1,do,2)=0]&&[(device1, do,3)=0]}"
     extracted2 := task_qu.ExtractContent(input2) //將input轉換成info
 
     taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
@@ -66,29 +99,25 @@
 - Declare your Device as an object
   
   ```go
-    do := do.NewMachine("e1200", "1213","192.168.127.254", "do", 8)
+    doObj := do.NewMachine("e1200", "1213","192.168.127.254", "do", 8)
     //Parameters are "main model", "sub-model","IP", "IO channel type", "Channel numbers"
   ```
   
-- Declare Do interface
-  
-  ```go
-    doObj := do.DoObj{}
-  ```
+
   
 - Use Do_choose_api to select the RESTful function you want to execute. Below are examples using get / put Value.
   
 - Get:
   
   ```go
-    doObj.Do_choose_api("DO_GET_VALUE", do, 1, "")
+    do.Do_choose_api("DO_GET_VALUE", doObj, 1, "")
     //Parameters: "function keyword", "machine obj", "channel number"
   ```
   
 - Put:
   
   ```go
-    doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "0")
+    do.Do_choose_api("DO_PUT_VALUE", doObj, 1, "0")
     //Parameters: "function keyword", "machine obj", "channel number", "msg"
     ```
   
@@ -120,14 +149,14 @@
                 wg.Add(1)
                 defer wg.Done()
     
-                doObj.Do_choose_api("DO_WHOLE", do, 0, "") //update resful value
-                res := doObj.Do_choose_api("DO_CHECK", do, 0, "1")//check machine channel 0 status
+                do.Do_choose_api("DO_WHOLE", doObj, 0, "") //update resful value
+                res := do.Do_choose_api("DO_CHECK", doObj, 0, "1")//check machine channel 0 status
     
                 if res == lastCheckResult { ////ensure only executes once
                     return
                 }
                 lastCheckResult = res
-                go task1(doObj, do) //execute task1
+                go task1(doObj) //execute task1
             }()
         }
     ```
@@ -135,13 +164,13 @@
 - task1
   
   ```go
-    func task1(doObj do.DoObj, do *do.Machine) {
+    func task1( doObj *do.Machine) {
     
-        res :=doObj.Do_choose_api("DO_CHECK", do, 0, "1") //check if ch is 1
+        res :=do.Do_choose_api("DO_CHECK", doObj, 0, "1") //check if ch is 1
         if res == 1 {
-            sub_task1(doObj, do) // true execute sub task1
+            sub_task1(doObj) // true execute sub task1
         }else{
-            sub_task2(doObj, do) // true execute sub task2
+            sub_task2(doObj) // true execute sub task2
         }
     
         
@@ -152,25 +181,25 @@
 - sub task
   
   ```go
-    func sub_task1(doObj do.DoObj, do *do.Machine) { //set do ch 1~5 to on
+    func sub_task1( doObj *do.Machine) { //set do ch 1~5 to on
     
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "1")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 2, "1")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 3, "1")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 4, "1")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 5, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 1, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 2, "1")
+        do.Do_choose_api("DO_PUT_VALUE", do, 3, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 4, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 5, "1")
         fmt.Println("End sub task1")
     }
     
-    func sub_task2(doObj do.DoObj, do *do.Machine) { //set do ch 1~5 to off, 6~7 to on
+    func sub_task2(doObj *do.Machine) { //set do ch 1~5 to off, 6~7 to on
     
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 1, "0")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 2, "0")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 3, "0")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 4, "0")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 5, "0")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 6, "1")
-        doObj.Do_choose_api("DO_PUT_VALUE", do, 7, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 1, "0")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 2, "0")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 3, "0")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 4, "0")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 5, "0")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 6, "1")
+        do.Do_choose_api("DO_PUT_VALUE", doObj, 7, "1")
         fmt.Println("End sub task2")
     }
     ```
