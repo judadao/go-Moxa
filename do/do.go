@@ -8,45 +8,43 @@ import (
 	"strconv"
 )
 
-var do_test_value1 = 0
-var do_test_value2 = 0
-var do_test_value3 = 0
-var do_test_value4 = 0
-var do_test_value5 = 0
-var do_test_value6 = 0
-var do_test_value7 = 0
-var do_test_value8 = 0
 
-func NewMachine(main_type string, sub_type string, ip string, ch_type string, numOfChan int) *Machine {
-	machine := &Machine{
-		Main_type: main_type,
-		Sub_type:  sub_type,
-		IP:        ip,
-		Ch_type:   ch_type,
-		Channel:   make([]chan int, numOfChan),
-		NumOfChan: numOfChan,
+
+func (mt MachineType1200) Call(apiKey string, machine *Machine,  ch interface{}, wrData string) int {
+	if fn, ok := doApiMap[apiKey]; ok {
+		return fn(apiKey, machine, ch.(int), wrData)
+
 	}
-	// 初始化每个通道
-	for i := range machine.Channel {
-		machine.Channel[i] = make(chan int, 1)
-	}
-	return machine
+	fmt.Println("Function not found for apiKey:", apiKey)
+	return -1
 }
 
-func Do_choose_api(apiKey string, machine *Machine, ch int, wrData string) int {
-	// var apiKey = ""
+func (mt MachineType4510) Call(apiKey string, machine *Machine,  ch interface{}, wrData string) int {
+	if fn, ok := do4510_ApiMap[apiKey]; ok {
+		return fn(apiKey, machine, ch.(string), wrData)
+	}
+	fmt.Println("Function not found for apiKey:", apiKey)
+	return -1
+}
+
+func Do_choose_api(apiKey string, machine *Machine, ch interface{}, wrData string) int {
 	if machine == nil {
 		fmt.Println("Machine is nil")
 		return -1
 	}
-	// apiKey = "DO_WHOLE"
-	if fn, ok := doApiMap[apiKey]; ok {
-		return fn(apiKey, machine, ch, wrData)
-	} else {
-		fmt.Println("not exit")
+
+	var mt MachineTypeFunc
+	switch machine.Main_type {
+	case "e1200":
+		mt = MachineType1200{}
+	case "4510":
+		mt = MachineType4510{}
+	default:
+		fmt.Println("Unsupported machine type")
 		return -1
 	}
 
+	return mt.Call(apiKey, machine, ch, wrData)
 }
 
 //TODO: get server ip func, finish other api，get slot number

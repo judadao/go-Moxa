@@ -12,7 +12,7 @@ func Task_func(taskInfo *task_qu.Task) {
 	// var lastCheckResult int
 	doObjs := make(map[string]*do.Machine)  // creat obj map
 	for name, device := range taskInfo.Device {
-		doObjs[name] = do.NewMachine(device.Type, device.SubType, device.IP, "do", 8)
+		doObjs[name] = do.NewMachine(device.Type, device.SubType, device.IP, "do", do.Subtype_map[device.SubType])
 	}
 
 	res := 1

@@ -6,9 +6,17 @@ type DoRequest struct {
 	Ch     int
 }
 
-type do_allApiFunc func(string, *Machine, int, string) int
+type MachineType1200Func func(string, *Machine, int, string) int
+type MachineType4510Func func(string, *Machine, string, string) int
 
-var doApiMap = map[string]do_allApiFunc{
+type MachineTypeFunc interface {
+	Call(string, *Machine, interface{}, string) int
+}
+
+type MachineType1200 struct{}
+type MachineType4510 struct{}
+
+var doApiMap = map[string]MachineType1200Func{
 	"DO_WHOLE":          do_update_value,
 	"DO_CHECK":          do_check_value,
 	"DO_STATUS":         do_get_status,
@@ -21,11 +29,26 @@ var doApiMap = map[string]do_allApiFunc{
 	"TEST_DO_PUT_VALUE": test_do_put_value,
 }
 
+var do4510_ApiMap = map[string]MachineType4510Func{
+	"DO_GET_VALUE": do4510_get_value,
+	// "DO_CHECK":     do_check_value,
+	// "DO_GET_VALUE": do_get_value,
+	// "DO_PUT_VALUE": do_put_value,
+}
+
 // key must same with doApiMap
 var restUri = map[string]string{
 	"DO_WHOLE":     "/api/slot/0/io/do",
 	"DO_GET_VALUE": "/api/slot/0/io/do",
 	"DO_PUT_VALUE": "/api/slot/0/io/do",
+}
+
+var Subtype_map = map[string]int{
+	"e1211": 16,
+	"e1212": 8,
+	"e1213": 8,
+	"e1214": 8,
+	"e1242": 4,
 }
 
 var restParam = map[string]string{

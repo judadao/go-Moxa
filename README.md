@@ -14,7 +14,7 @@
     
 - Cross-platform control supports the following devices:
   
-  - Moxa E1200 Series(DO)
+  - Moxa E1200 Series(DO): e1211, e1212, e1213, e1214, e1242
     
 
 ## Quick Start
