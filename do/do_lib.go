@@ -61,6 +61,7 @@ var restParam = map[string]string{
 type Machine struct {
 	Main_type string
 	Sub_type  string
+	Slot_nick string
 	IP        string
 	Ch_type   string
 	Channel   []chan int

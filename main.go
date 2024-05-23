@@ -41,8 +41,8 @@ func main() {
 	// select {}
 	fmt.Println("All Goroutines have finished.")
 
-	do4510 := do.NewMachine("4510", "2600", "192.168.127.254", "do", 16)
-	do.Do_choose_api("DO_GET_VALUE", do4510, "45MR-2600-0", "DO-00")
+	do4510 := do.NewMachine_4510("4510", "2600", "192.168.127.254", "45MR-2600-0", "do", 16)
+	do.Do_choose_api("DO_GET_VALUE", do4510, "DO-00", "0")
 
 }
 
