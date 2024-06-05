@@ -50,6 +50,7 @@ var Subtype_map = map[string]int{
 	"e1213": 8,
 	"e1214": 8,
 	"e1242": 4,
+	"2600":  16,
 }
 
 var restParam = map[string]string{

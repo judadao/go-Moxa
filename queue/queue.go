@@ -42,6 +42,7 @@ type Action struct {
 func ExtractContent(input string) Task {
 	// var task Task
 	task := Task{Device: make(map[string]DeviceInfo)}
+	task.LastCheck = -1
 
 	// device
 	deviceRe := regexp.MustCompile(`\[\(([^,]+),\s*([^,]+),\s*([^\)]+)\)\s*=\s*([^\]]+)\]`)

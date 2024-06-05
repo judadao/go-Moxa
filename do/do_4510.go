@@ -57,20 +57,26 @@ func do4510_check_nick_map(chName string) int {
 }
 
 func do4510_get_value(apiKey string, machine *Machine, chName string, value string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName)
+	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName, ",value:", value)
 	do4510_check_nick_map(chName)
-	num, err := strconv.Atoi(value)
-	if err != nil {
-		fmt.Println("轉換失敗:", err)
-		Do_clear_ch(machine, g_nickChMap.NickToIndex[chName])
-		return -1
-	}
- 
+	// num, err := strconv.Atoi(value)
+	// if err != nil {
+	// 	fmt.Println("轉換失敗:", err)
+	// 	Do_clear_ch(machine, g_nickChMap.NickToIndex[chName])
+	// 	return -1
+	// }
+	num := do4510_get_rest_request(apiKey, machine, chName)
 	if do4510_get_rest_request(apiKey, machine, chName) == -1{
 		return -1
 	}
-	Do_clear_ch(machine, g_nickChMap.NickToIndex[chName])
-	Do_push_ch(machine, g_nickChMap.NickToIndex[chName], num)
+	if index, exists := g_nickChMap.NickToIndex[chName]; exists {
+		
+		Do_clear_ch(machine, index)
+		Do_push_ch(machine, index, num)
+	} else {
+		fmt.Println("Error: Index for", chName, "not found in NickToIndex map")
+		return -1
+	}
 	
 	// fmt.Println(res)
 	return 0
@@ -90,8 +96,13 @@ func do4510_put_value(apiKey string, machine *Machine, chName string, value stri
 		return -1
 	}
 	
-	Do_clear_ch(machine, g_nickChMap.NickToIndex[chName])
-	Do_push_ch(machine, g_nickChMap.NickToIndex[chName], num)
+	if index, exists := g_nickChMap.NickToIndex[chName]; exists {
+		Do_clear_ch(machine, index)
+		Do_push_ch(machine, index, num)
+	} else {
+		fmt.Println("Error: Index for", chName, "not found in NickToIndex map")
+		return -1
+	}
 
 	return 0
 }
@@ -131,9 +142,11 @@ func do4510_get_rest_request(apiKey string, machine *Machine, chName string) int
 		fmt.Println("Error: 'value' is not a float64")
 		return -1
 	}
-	fmt.Println("status", status)
+	
 	statusInt := int(status)
+	fmt.Println("status", statusInt)
 	g_nickChMap.NickToValue[chName] = statusInt
+	// fmt.Println("status", chName)
 
 
 	return statusInt
@@ -195,6 +208,8 @@ func _do4510_check_value(apiKey string, machine *Machine, chName string, wrData 
 		fmt.Println("trans fail:", err)
 		return -1
 	}
+	fmt.Println("_do4510_check_value wrData:", wrData)
+	fmt.Println("_do4510_check_value value:", value)
 	if i == value {
 		return 1
 	} else {
