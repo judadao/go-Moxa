@@ -57,9 +57,12 @@
     [(e1200, e1213, 192.168.127.254)=device1] // set device1 info
     ```
   - Example of a Full Prompt
-    - Set project moxaA
-    - set project moxaB
-    - Use Ai & excute Task
+    - Set project moxaA![moxaA](https://github.com/judadao/go-Moxa/assets/16066903/cdb57584-180a-46c6-98e8-e030622015ae)
+
+    - set project moxaB![moxaB](https://github.com/judadao/go-Moxa/assets/16066903/662a4d9b-e7af-4171-aba4-f5a69566e254)
+
+    - Use Ai & excute Task![ai_result](https://github.com/judadao/go-Moxa/assets/16066903/af5ef87e-e51f-4b4a-b708-8642eb231591)
+
 
 
 
