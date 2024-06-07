@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	task_qu "go-Moxa/queue"
 	allTask "go-Moxa/task"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -18,10 +20,27 @@ import (
 
 
 func main() {
-	
-	key := "key"
 
-	client := openai.NewClient(key)
+	bytes, err := os.ReadFile("api_key.json")
+	if err != nil {
+		log.Fatalf("can't read  json file: %v", err)
+	}
+
+	
+	var data map[string]string
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		log.Fatalf("can't read  json file: %v", err)
+	}
+
+	apiKey, exists := data["api_key"]
+	if !exists || apiKey == "" {
+		log.Fatalf("can't get api key")
+	}
+
+
+	fmt.Println("API Key:", apiKey)
+
+	client := openai.NewClient(apiKey)
 
 	taskQueue := task_qu.NewTaskQueue()
 
@@ -100,12 +119,16 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 		var triggerConditions []string
 		var actions []string
 		var extrDict = make(map[string] *task_qu.Task)
-
+		systemtext_device_info := "[MOXAREST] : 請提供裝置訊息，格式為[(主類型，子類型，IP地址)=裝置名稱]，多個裝置之間用逗號分隔："
+		systemtext_trigger_info := "[MOXAREST] : 請提供觸發條件訊息，格式為[(裝置名稱，通道類型，通道名稱)=值]，多個觸發條件之間用逗號分隔："
+		systemtext_action_info :=  "[MOXAREST] : 請提供動作訊息，格式為[(裝置名稱，通道類型，通道名稱)=值]，多個動作之間用逗號分隔："
+		systemtext_moxarest_menu :=  "[MOXAREST] : 請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)"
+		systemtext_moxarest_info := "[MOXAREST] : 請輸入 'moxarest' 來開始設置，或是進行一般對話"
 		
 		for {
 			// 讀取用戶輸入
 			// 初始提示信息
-			fmt.Println("請輸入 'moxarest' 來開始設置，或是進行一般對話")
+			fmt.Println(systemtext_moxarest_info)
 			fmt.Print("You: ")
 			scanner.Scan()
 			userInput := scanner.Text()
@@ -114,7 +137,7 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 
 			if strings.ToLower(userInput) == "moxarest" {
 				
-				conversation = append(conversation, openai.ChatCompletionMessage{Role: "system", Content: "請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)"})
+				conversation = append(conversation, openai.ChatCompletionMessage{Role: "system", Content: systemtext_moxarest_menu})
 				fmt.Println(conversation[len(conversation)-1].Content)
 
 				for !shouldBreak {
@@ -128,7 +151,8 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 					switch userInput {
 					case "機器":
 					case "1":
-						fmt.Println("MOXAREST: 請提供裝置信息，格式為[(主類型，子類型，IP地址)=裝置名稱]，多個裝置信息之間用逗號分隔：")
+						fmt.Println(systemtext_device_info)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "system", Content: systemtext_device_info})
 						fmt.Print("You: ")
 						// scanner.Scan()
 						// deviceInput := scanner.Text()
@@ -137,27 +161,31 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 						joinedDeviceInfo := processInput(deviceInput)
 
 						deviceInfo = append(deviceInfo, joinedDeviceInfo)
-						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: joinedDeviceInfo})
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: "機器"+joinedDeviceInfo})
 
 						
 						deviceString := strings.Join(deviceInfo, "&&")
 						fmt.Printf("device{%s}\n", deviceString)
-						fmt.Println("請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
+						fmt.Println(systemtext_moxarest_menu)
 					case "觸發條件":
 					case "2":
-						fmt.Println("MOXAREST: 請提供觸發條件信息，格式為[(裝置名稱，通道類型，通道名稱)=值]，多個觸發條件之間用逗號分隔：")
+						
+						fmt.Println(systemtext_trigger_info)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "system", Content: systemtext_trigger_info})
 						fmt.Print("You: ")
 						scanner.Scan()
 						triggerInput := scanner.Text()
 						// triggerInput := "[(45MR-2600-0, do, DO-00)=1], [(device2, do, 0)=1]"
 						joinedTriggerConditions := processInput(triggerInput)
 						triggerConditions = append(triggerConditions, joinedTriggerConditions)
-						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: joinedTriggerConditions})
-						fmt.Println("請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
+						fmt.Printf("when{%s}\n", triggerConditions)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: "觸發條件"+joinedTriggerConditions})
+						fmt.Println(systemtext_moxarest_menu)
 
 					case "動作":
 					case "3":
-						fmt.Println("MOXAREST: 請提供動作信息，格式為[(裝置名稱，通道類型，通道名稱)=值]，多個動作之間用逗號分隔：")
+						fmt.Println(systemtext_action_info)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "system", Content: systemtext_action_info})
 						fmt.Print("You: ")
 						scanner.Scan()
 						actionInput := scanner.Text()
@@ -165,8 +193,9 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 						joinedActions := processInput(actionInput)
 
 						actions = append(actions, joinedActions)
-						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: joinedActions})
-						fmt.Println("請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
+						fmt.Printf("action{%s}\n", actions)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: "動作"+joinedActions})
+						fmt.Println(systemtext_moxarest_menu)
 
 					case "顯示":
 					case "4":
@@ -177,43 +206,52 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 						fmt.Printf("device{%s}\n", deviceString)
 						fmt.Printf("when{%s}\n", triggerString)
 						fmt.Printf("action{%s}\n", actionString)
-						fmt.Println("請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
+						fmt.Println(systemtext_moxarest_menu)
 
 					case "End":
 					case "5":
 						// 結束設置過程
 						fmt.Println("設定結束。")
-						fmt.Println("MOXAREST: 此Task的名字是?")
+						fmt.Println("[MOXAREST]: 此Task的名字是?")
 						fmt.Print("You: ")
 						scanner.Scan()
 						endInput := scanner.Text()
 						result := assembleInfo(deviceInfo, triggerConditions, actions)
 						fmt.Println(result)
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: "project name:"+endInput+" project info:"+result})
 
 						// addResultToGlobalDict(endInput, result)
 						extrDict[endInput] = task_qu.ExtractContent(result)
-						// extractedResult := task_qu.ExtractContent(result)
 						
-						// extractedResult2 := task_qu.ExtractContent("device{[(4510, 2600, 192.168.127.254)=45MR-2600-0]&&[(1200, e1211, 192.168.127.253)=device2]}, when{[(45MR-2600-0, do,DO-00)=0]&&[(device2, do,0)=1]}, then{[(45MR-2600-0,do,DO-01)=1]&&[(45MR-2600-0, do,DO-02)=1]}")
+						
+						
 
 						task_queue.AddTask(func(taskInfo task_qu.Task) {
 							allTask.Task_func(extrDict[endInput])
 						})
-
-						// task_queue.AddTask(func(taskInfo task_qu.Task) {
-						// 	allTask.Task_func(&extractedResult2)
-						// })
 
 						deviceInfo = nil
     					triggerConditions = nil
     					actions = nil
 						// fmt.Println("請輸入 'moxarest' 來開始設置，或是進行一般對話")
 						shouldBreak = true
-						
+						conversation = append(conversation, openai.ChatCompletionMessage{Role: "user", Content: userInput})
+						_, err := client.CreateChatCompletion(
+							context.Background(),
+							openai.ChatCompletionRequest{
+								Model:    openai.GPT3Dot5Turbo,
+								Messages: conversation,
+							},
+						)
+						if err != nil {
+							fmt.Printf("ChatCompletion error: %v\n", err)
+							break
+						}
+								
 
 					default:
 						// 發送對話內容到OpenAI API
-						fmt.Println("關鍵詞有誤，請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
+						fmt.Println("[moxarest] 關鍵詞有誤，請輸入以下其中一個關鍵詞：機器(1)、觸發條件(2)、動作(3)、顯示(4)、結束(5)")
 						fmt.Println("或是ENDˋ結束設定進行一般對話")
 					}
 				}
@@ -233,7 +271,7 @@ func startConversation(client *openai.Client, task_queue *task_qu.TaskQueue) {
 				}
 
 				// 打印OpenAI API返回的回復
-				fmt.Println("AI:", resp.Choices[0].Message.Content)
+				fmt.Println("[moxarest] :", resp.Choices[0].Message.Content)
 
 				// 將AI回復添加到對話內容中
 				conversation = append(conversation, openai.ChatCompletionMessage{Role: "assistant", Content: resp.Choices[0].Message.Content})
