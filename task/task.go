@@ -12,6 +12,7 @@ func Task_func(taskInfo *task_qu.Task) {
 	// var lastCheckResult int
 	
 	doObjs := make(map[string]*do.Machine)  // creat obj map
+	// fmt.Println(taskInfo.Device)
 
 	for name, device := range taskInfo.Device {
 		// fmt.Println("[####]Number of conditions:", name)
@@ -48,7 +49,7 @@ func Task_func(taskInfo *task_qu.Task) {
 
 	if res == taskInfo.LastCheck {
 		// check last
-		fmt.Println("Status is the same as last check, no action needed.")
+		// fmt.Println("Status is the same as last check, no action needed.")
 		return
 	}
 	retryCount := 5
@@ -64,7 +65,7 @@ func Task_func(taskInfo *task_qu.Task) {
 					result := do.Do_choose_api("DO_PUT_VALUE", doObj, chnum, action.Value)
 
 					if result != -1 {
-						fmt.Println("Do_choose_api successful!")
+						// fmt.Println("Do_choose_api successful!")
 						break
 					}
 

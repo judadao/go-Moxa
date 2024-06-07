@@ -9,12 +9,14 @@
   - Using object declaration for devices makes usage more intuitive.
     
   - Freedom to assemble function requirements.
-  - (2024/05/21 update) A task can be automatically generated from the input sentence task
-  - (#TODO: 串接AI)
+  - 可以直接使用文字描述來新增想要的Task來控制機器
+  - 結合Chatgpt api 可以連動AI完成Task
+
     
 - Cross-platform control supports the following devices:
   
   - Moxa E1200 Series(DO): e1211, e1212, e1213, e1214, e1242
+  - Moxa ioThinx 4510(DO)
     
 
 ## Quick Start
@@ -23,6 +25,7 @@
 #### Excute 
 - Install
   1. Clone this repository: git clone [repo_url]
+  2. prepare your chatgpt api key and replace key in api_key.json 
   2. Run:
     ```bash
     go run main.go
@@ -53,44 +56,13 @@
     //In Device
     [(e1200, e1213, 192.168.127.254)=device1] // set device1 info
     ```
-  - Condition Groups will use "{ }" in three main fields
-  
-    ```go  
-    device{}, when{}, then{}
-    ```
   - Example of a Full Prompt
-    ```go
-    device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.255)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=0]}, then{[(device1,do,2)=1]&&[(device1, do,3)=1]}
-    // device1 = (e1200, e1213, 192.168.127.254)
-    // device2 = (e1200, e1213, 192.168.127.255)
-    // When device1's do channel 0 is equal to 1 and device2's do channel 1 is equal to 0 
-    // Then device1's do channel 2 is set to 1 and device1's do channel 3 is set to 1
-    ```
-- Add an Task
-  ```go
-    input1 := "device{(e1200, e1213, 192.168.127.254)}, when{[(do,0)=1]}, then{[(do,1)=0]&&[(do,2)=0]&&[(do,3)=0]}"
-    extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
+    - Set project moxaA![moxaA](https://github.com/judadao/go-Moxa/assets/16066903/cdb57584-180a-46c6-98e8-e030622015ae)
 
-    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
-      allTask.Task_func(&extracted1)
-    })
-  ```
-- Add many Tasks
-  ```go
-    input1 := "device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.254)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=0]}, then{[(device1,do,2)=1]&&[(device1, do,3)=1]}"
-    extracted1 := task_qu.ExtractContent(input1) //將input轉換成info
+    - set project moxaB![moxaB](https://github.com/judadao/go-Moxa/assets/16066903/662a4d9b-e7af-4171-aba4-f5a69566e254)
 
-    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
-      allTask.Task_func(&extracted1) // 將info輸入task
-    })
+    - Use Ai & excute Task![ai_result](https://github.com/judadao/go-Moxa/assets/16066903/af5ef87e-e51f-4b4a-b708-8642eb231591)
 
-    input2 := "device{[(e1200, e1213, 192.168.127.254)=device1]&&[(e1200, e1213, 192.168.127.255)=device2]}, when{[(device1, do,0)=1]&&[(device2, do,1)=1]}, then{[(device1,do,2)=0]&&[(device1, do,3)=0]}"
-    extracted2 := task_qu.ExtractContent(input2) //將input轉換成info
-
-    taskQueue.AddTask(func(taskInfo task_qu.Task) { //將task加入queue
-      allTask.Task_func(&extracted2)
-    })
-  ```
 
 
 

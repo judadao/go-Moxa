@@ -48,16 +48,16 @@ func (n *ChNickMap) GetNicknValue(nickName string) (int, bool) {
 func do4510_check_nick_map(chName string) int {
 	if _, exists := g_nickChMap.NickToValue[chName]; !exists {
         g_nickChMap.AddNickn(chName)
-        fmt.Println("Key added:", chName)
+        // fmt.Println("Key added:", chName)
     } else {
-        fmt.Println("Key already exists:", chName)
+        return 0
     }
 	return 0
 
 }
 
 func do4510_get_value(apiKey string, machine *Machine, chName string, value string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName, ",value:", value)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName, ",value:", value)
 	do4510_check_nick_map(chName)
 	// num, err := strconv.Atoi(value)
 	// if err != nil {
@@ -83,7 +83,7 @@ func do4510_get_value(apiKey string, machine *Machine, chName string, value stri
 }
 
 func do4510_put_value(apiKey string, machine *Machine, chName string, value string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName)
 	do4510_check_nick_map(chName)
 	
 	num, err := strconv.Atoi(value)
@@ -114,7 +114,7 @@ func do4510_get_rest_request(apiKey string, machine *Machine, chName string) int
 	param := "/doStatus"
 	ioName := machine.Slot_nick +"@"+chName
 	uri := "http://" + machine.IP + "/api" + "/io/do/" + ioName + param
-	fmt.Println(uri)
+	// fmt.Println(uri)
 	resp, err := http_rest.SendGETRequest_v2(uri)
 	if err != nil {
 		fmt.Println("Error sending GET request:", err)
@@ -129,7 +129,7 @@ func do4510_get_rest_request(apiKey string, machine *Machine, chName string) int
 		return -1
 	}
 
-	fmt.Println("Response body:", string(body))
+	// fmt.Println("Response body:", string(body))
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
@@ -144,7 +144,7 @@ func do4510_get_rest_request(apiKey string, machine *Machine, chName string) int
 	}
 	
 	statusInt := int(status)
-	fmt.Println("status", statusInt)
+	// fmt.Println("status", statusInt)
 	g_nickChMap.NickToValue[chName] = statusInt
 	// fmt.Println("status", chName)
 
@@ -158,7 +158,7 @@ func do4510_put_rest_request(apiKey string, machine *Machine, chName string, val
 	param := "/doStatus"
 	ioName := machine.Slot_nick +"@"+chName
 	uri := "http://" + machine.IP + "/api" + "/io/do/" + ioName + param
-	fmt.Println(uri)
+	// fmt.Println(uri)
 	reqJson := `{"value":`+value+`}`
 	resp, err := http_rest.SendPUTRequest_v2(uri, reqJson)
 	if err != nil {
@@ -174,7 +174,7 @@ func do4510_put_rest_request(apiKey string, machine *Machine, chName string, val
 		return -1
 	}
 
-	fmt.Println("Response body:", string(body))
+	// fmt.Println("Response body:", string(body))
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
@@ -187,7 +187,7 @@ func do4510_put_rest_request(apiKey string, machine *Machine, chName string, val
 		fmt.Println("Error: 'value' is not a float64")
 		return -1
 	}
-	fmt.Println("status", status)
+	// fmt.Println("status", status)
 	statusInt := int(status)
 	
 
@@ -201,15 +201,15 @@ func _do4510_check_value(apiKey string, machine *Machine, chName string, wrData 
 
 	var ch, _=g_nickChMap.GetNicknIndex(chName)
 	value := <-machine.Channel[ch]
-	fmt.Println("ch ", ch, ":", value)
+	// fmt.Println("ch ", ch, ":", value)
 	machine.Channel[ch] <- value
 	i, err := strconv.Atoi(wrData)
 	if err != nil {
 		fmt.Println("trans fail:", err)
 		return -1
 	}
-	fmt.Println("_do4510_check_value wrData:", wrData)
-	fmt.Println("_do4510_check_value value:", value)
+	// fmt.Println("_do4510_check_value wrData:", wrData)
+	// fmt.Println("_do4510_check_value value:", value)
 	if i == value {
 		return 1
 	} else {
@@ -219,7 +219,7 @@ func _do4510_check_value(apiKey string, machine *Machine, chName string, wrData 
 }
 
 func do4510_check_value(apiKey string, machine *Machine,  chName string, wrData string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", chName)
 
 	return _do4510_check_value(apiKey, machine, chName, wrData)
 }

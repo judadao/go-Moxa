@@ -39,7 +39,7 @@ type Action struct {
 	Value  string
 }
 
-func ExtractContent(input string) Task {
+func ExtractContent(input string) *Task {
 	// var task Task
 	task := Task{Device: make(map[string]DeviceInfo)}
 	task.LastCheck = -1
@@ -112,7 +112,7 @@ func ExtractContent(input string) Task {
 		}
 	}
 
-	return task
+	return &task
 }
 
 func NewTaskQueue() *TaskQueue {

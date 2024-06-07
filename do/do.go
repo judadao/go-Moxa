@@ -60,7 +60,7 @@ func do_update_whole_status(apiKey string, machine *Machine, ch string, wrData s
 		return nil, fmt.Errorf("wrong type")
 	}
 
-	fmt.Println("http://" + machine.IP + uri)
+	// fmt.Println("http://" + machine.IP + uri)
 	resp, err := http_rest.SendGETRequest("http://" + machine.IP + uri)
 	if err != nil {
 		return nil, fmt.Errorf("error sending GET request: %s", err)
@@ -109,7 +109,7 @@ func do_get_rest_request(apiKey string, do_param string, machine *Machine, ch st
 		fmt.Println("Error: msg not found in restUri")
 		return -1
 	}
-	fmt.Println("http://" + machine.IP + uri + "/" + ch + param)
+	// fmt.Println("http://" + machine.IP + uri + "/" + ch + param)
 	resp, err := http_rest.SendGETRequest("http://" + machine.IP + uri + "/" + ch + param)
 	if err != nil {
 		fmt.Println("Error sending GET request:", err)
@@ -142,7 +142,7 @@ func do_put_rest_request(apiKey string, do_param string, machine *Machine, ch st
 	uri, ok := restUri[apiKey]
 	intch, _ := strconv.Atoi(ch)
 	reqJson := `{"slot":0,"io":{"do":{"` + ch + `":{"doStatus":` + wrData + `}}}}`
-	fmt.Println(reqJson)
+	// fmt.Println(reqJson)
 	if !ok {
 		Do_clear_ch(machine, intch)
 		return -1
@@ -153,7 +153,7 @@ func do_put_rest_request(apiKey string, do_param string, machine *Machine, ch st
 		Do_clear_ch(machine, intch)
 		return -1
 	}
-	fmt.Println("http://" + machine.IP + uri + "/" + ch + param)
+	// fmt.Println("http://" + machine.IP + uri + "/" + ch + param)
 	_, err := http_rest.SendPUTRequest("http://"+machine.IP+uri+"/"+ch+param, reqJson)
 	if err != nil {
 		fmt.Println("Error sending GET request:", err)
@@ -169,7 +169,7 @@ func do_put_rest_request(apiKey string, do_param string, machine *Machine, ch st
 
 	Do_push_ch(machine, intch, num)
 
-	fmt.Println("success")
+	// fmt.Println("success")
 	return 0
 
 }
@@ -215,7 +215,7 @@ func _do_check_value(apiKey string, machine *Machine, ch string, wrData string) 
 
 	intch, _ := strconv.Atoi(ch)
 	value := <-machine.Channel[intch]
-	fmt.Println("ch ", ch, ":", value)
+	// fmt.Println("ch ", ch, ":", value)
 	machine.Channel[intch] <- value
 	i, err := strconv.Atoi(wrData)
 	if err != nil {
@@ -233,25 +233,25 @@ func _do_check_value(apiKey string, machine *Machine, ch string, wrData string) 
 //commom func
 
 func do_check_value(apiKey string, machine *Machine, ch string, wrData string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
 
 	return _do_check_value(apiKey, machine, ch, wrData)
 }
 func do_get_whole_value(apiKey string, machine *Machine, ch string, wrData string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
 	do_update_whole_status(apiKey, machine, "", wrData)
 
 	return 0
 }
 func do_get_value(apiKey string, machine *Machine, ch string, wrData string) int {
 	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
-	res := do_get_rest_request(apiKey, "DO_STATUS", machine, ch, wrData)
-	fmt.Println(res)
+	do_get_rest_request(apiKey, "DO_STATUS", machine, ch, wrData)
+	// fmt.Println(res)
 	return 0
 }
 
 func do_put_value(apiKey string, machine *Machine, ch string, wrData string) int {
-	fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
+	// fmt.Println("do_get_status:", apiKey, " ,ip:", machine.IP, " ,ch:", ch)
 	// Do_pop_ch(machine, ch)
 	strch, _ := strconv.Atoi(ch)
 	Do_clear_ch(machine, strch)
@@ -261,7 +261,7 @@ func do_put_value(apiKey string, machine *Machine, ch string, wrData string) int
 
 func Do_push_ch(machine *Machine, ch int, value int) int {
 
-	fmt.Println("PUSH ip:", machine.IP, " ,ch:", ch, ", value", value)
+	// fmt.Println("PUSH ip:", machine.IP, " ,ch:", ch, ", value", value)
 	// fmt.Println("[####result####]Get value:", )
 	select {
 	case machine.Channel[ch] <- value:
@@ -277,7 +277,7 @@ func Do_pop_ch(machine *Machine, ch int) int {
 	// fmt.Println("[####result####]Get value:", )
 	select {
 	case res := <-machine.Channel[ch]:
-		fmt.Println("POP ip:", machine.IP, " ,ch:", ch, ", value", res)
+		// fmt.Println("POP ip:", machine.IP, " ,ch:", ch, ", value", res)
 		return res
 	default:
 
